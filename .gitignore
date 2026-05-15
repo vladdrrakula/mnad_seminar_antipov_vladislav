@@ -1,2 +1,5 @@
 myvenv/
 .env
+models/
+*.json
+__pycache__/

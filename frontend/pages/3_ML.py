@@ -52,7 +52,7 @@ with col_1:
         st.session_state.X_test = X_test
         st.session_state.y_test = y_test
 
-        # time.sleep(10)
+        time.sleep(10)
 
         st.success("Model trained")
 
