@@ -26,15 +26,17 @@ import pandas as pd
 from pathlib import Path
 
 class PredictRequest(BaseModel):
-    level: float
     levels: float
     rooms: float
     area: float
     kitchen_area: float
-    building_type: float
+    geo_lat: float
+    geo_lon: float
     object_type: float
     level_last: float
     level_first: float
+
+
 
 MODEL_PATH = Path("backend/ml/model.pkl")
 if MODEL_PATH.exists():
@@ -48,22 +50,23 @@ else:
     my_model = None
     print(f"⚠️ Файл модели не найден по пути: {MODEL_PATH}")
 
+
 @app.post("/predict")
 def predict_price(data: PredictRequest):
-    """
-    Принимает 9 признаков и возвращает предсказание модели
-    """
     if my_model is None:
-        raise HTTPException(status_code=503, detail="Модель не загружена на сервере")
-    
+        raise HTTPException(status_code=503, detail="Модель не загружена")
     try:
-        input_df = pd.DataFrame([data.dict()])
-        
-        prediction = my_model.predict(input_df)[0]
-        
+        # Задаём порядок признаков в точности, как в модели
+        feature_order = ['levels', 'rooms', 'area', 'kitchen_area',
+                         'geo_lat', 'geo_lon', 'object_type',
+                         'level_last', 'level_first']
+        # Берём значения из запроса в правильном порядке
+        input_values = [getattr(data, field) for field in feature_order]
+        # Делаем предсказание
+        prediction = my_model.predict([input_values])[0]
         return {
             "prediction": float(prediction),
-            "message": f"Предсказанное значение: {float(prediction):.3f}"
+            "message": f"Предсказанное значение: {float(prediction):.2f}"
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Ошибка во время предсказания: {str(e)}")
